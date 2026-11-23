@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, SAE circuit analysis, or steering code, please cite it using the metadata below."
+title: "Mechanistic Debugging of Agentic Sabotage and Tool-Call Hallucinations: Cross-Scale Sparse Autoencoder Circuits in Multi-Turn Tool Use"
+type: software
+version: 0.1.0
+date-released: "2026-11-23"
+license: MIT
+url: "https://danielgaskins.com/agentic-sabotage.html"
+repository-code: "https://github.com/danielgaskins/agentic-sabotage"
+authors:
+  - family-names: Gaskins
+    given-names: Daniel
+    email: hello@danielgaskins.com
+    website: "https://danielgaskins.com/"
+keywords:
+  - mechanistic interpretability
+  - sparse autoencoders
+  - activation steering
+  - AI safety
+  - tool-use agents
+  - Gemma Scope

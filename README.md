@@ -1,11 +1,14 @@
 # Mechanistic Debugging of Agentic Sabotage & Tool-Call Hallucinations
 
+[![Case Study](https://img.shields.io/badge/Case_Study-danielgaskins.com-8cbf24.svg)](https://danielgaskins.com/agentic-sabotage.html)
 [![Paper PDF](https://img.shields.io/badge/Paper-PDF-b31b1b.svg)](paper/agentic_sabotage_preprint.pdf)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/danielgaskins/agentic-sabotage/blob/main/notebooks/colab_gemma2_9b_sabotage.ipynb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 End-to-end mechanistic interpretability benchmark and codebase mapping **unauthorized shortcut-taking ("agentic sabotage") vs. honest escalation/repair** in multi-turn tool-using language models (`Gemma-2-2B-IT` and `Gemma-2-9B-IT`) using **Gemma Scope 16k JumpReLU Sparse Autoencoders (SAEs)** and **Residual Linear Probes**.
 
+- **Author:** [Daniel Gaskins](https://danielgaskins.com/)
+- **Interactive Case Study:** [danielgaskins.com/agentic-sabotage.html](https://danielgaskins.com/agentic-sabotage.html)
 - **Preprint PDF:** [`paper/agentic_sabotage_preprint.pdf`](paper/agentic_sabotage_preprint.pdf)
 - **Detailed Tables & Notes:** [`REPORT.md`](REPORT.md)
 
@@ -71,6 +74,10 @@ uv run sabotage plot-all --model gemma-2-2b-it
 uv run python -m agentic_sabotage.cross_scale
 ```
 
+## Related Work
+
+- **[Mendmark — Mutation Testing for Agent Evals](https://danielgaskins.com/mendmark.html)** ([GitHub](https://github.com/danielgaskins/mendmark)): Companion open-source framework by [Daniel Gaskins](https://danielgaskins.com/) that tests whether external agent evaluation suites detect broken tool calls, wrong arguments, and hidden errors across 263 controlled trace mutations.
+
 ## Citation
 
 ```bibtex
@@ -78,6 +85,7 @@ uv run python -m agentic_sabotage.cross_scale
   title   = {Mechanistic Debugging of Agentic Sabotage and Tool-Call Hallucinations: Cross-Scale Sparse Autoencoder Circuits in Multi-Turn Tool Use},
   author  = {Gaskins, Daniel},
   year    = {2026},
-  url     = {https://github.com/danielgaskins/agentic-sabotage}
+  url     = {https://danielgaskins.com/agentic-sabotage.html},
+  note    = {Code and benchmark: https://github.com/danielgaskins/agentic-sabotage}
 }
 ```

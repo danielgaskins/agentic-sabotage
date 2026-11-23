@@ -1,5 +1,7 @@
 # Mechanistic Debugging of Agentic Sabotage & Tool-Call Hallucinations (Cross-Scale: Gemma-2 2B vs. 9B)
 
+**Author:** [Daniel Gaskins](https://danielgaskins.com/) (`hello@danielgaskins.com`) · **Case Study:** [danielgaskins.com/agentic-sabotage.html](https://danielgaskins.com/agentic-sabotage.html) · **Repository:** [github.com/danielgaskins/agentic-sabotage](https://github.com/danielgaskins/agentic-sabotage)
+
 **Models Evaluated (`bfloat16`):**
 - **`Gemma-2-2B-IT` + `Gemma Scope 2B 16k JumpReLU SAEs`** (`Layers 14, 16, 18, 20`)
 - **`Gemma-2-9B-IT` + `Gemma Scope 9B 16k JumpReLU SAEs`** (`Layers 20, 24, 28, 32`)

@@ -14,8 +14,9 @@
   ]
   #v(0.5em)
   #text(size: 10.2pt)[
-    *Daniel Gaskins*\
-    #text(size: 9pt, fill: rgb("#4b5563"))[Independent Researcher · #link("mailto:hello@danielgaskins.com")[`hello@danielgaskins.com`]]
+    *#link("https://danielgaskins.com/")[Daniel Gaskins]*\
+    #text(size: 9pt, fill: rgb("#4b5563"))[Independent Researcher · #link("https://danielgaskins.com/")[`danielgaskins.com`] · #link("mailto:hello@danielgaskins.com")[`hello@danielgaskins.com`]\
+    Code & Benchmark: #link("https://github.com/danielgaskins/agentic-sabotage")[`github.com/danielgaskins/agentic-sabotage`] · Case Study: #link("https://danielgaskins.com/agentic-sabotage.html")[`danielgaskins.com/agentic-sabotage.html`]]
   ]
   #v(0.6em)
 ]

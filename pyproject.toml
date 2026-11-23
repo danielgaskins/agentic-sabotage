@@ -3,6 +3,19 @@ name = "agentic-sabotage"
 version = "0.1.0"
 description = "Mechanistic Debugging of Agentic Sabotage & Tool-Call Hallucinations via Gemma Scope SAEs and Linear Probes"
 readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Daniel Gaskins", email = "hello@danielgaskins.com" },
+]
+keywords = [
+    "mechanistic-interpretability",
+    "sparse-autoencoders",
+    "activation-steering",
+    "ai-safety",
+    "llm-agents",
+    "gemma-2",
+    "tool-use",
+]
 requires-python = ">=3.11"
 dependencies = [
     "python-dotenv>=1.0.1",
@@ -22,6 +35,12 @@ dependencies = [
     "pydantic>=2.9.0",
     "rich>=13.8.0",
 ]
+
+[project.urls]
+Homepage = "https://danielgaskins.com/agentic-sabotage.html"
+Author = "https://danielgaskins.com/"
+Repository = "https://github.com/danielgaskins/agentic-sabotage"
+Preprint = "https://github.com/danielgaskins/agentic-sabotage/blob/main/paper/agentic_sabotage_preprint.pdf"
 
 [project.scripts]
 sabotage = "agentic_sabotage.cli:main"
