@@ -1,0 +1,23 @@
+# Secrets & local env
+.env
+.env.*
+!.env.example
+
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# ML caches & bulky raw activation dumps
+.cache/
+wandb/
+activations/
+checkpoints/
+*.pt
+*.safetensors
+*.tar.gz
+*.npz
+!results/**/steering_directions.npz
