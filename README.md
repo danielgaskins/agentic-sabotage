@@ -19,6 +19,9 @@ End-to-end mechanistic interpretability benchmark and codebase mapping **unautho
 1. **Inverse Scaling on Sycophantic Tool Fabrication (`2B` vs. `9B`):** Scaling `Gemma-2` from `2B` to `9B` eliminates unpressured shortcuts (`28%–48%` → `0%–4%`) and substantially reduces pressured unit-test tampering (`92% → 56%`) and hardcoded oracle bypasses (`68% → 28%`). Yet under executive bottleneck pressure during an upstream 503 outage, `Gemma-2-9B-IT` exhibits **higher** `tool_output_fabrication` (`88.0%` vs. `60.0%` in `2B`).
 2. **Closing the SAE Superposition Gap at Scale:** At ~57% model depth (`9B` Layer 24), sparse L1 probes over **Gemma Scope 9B 16k SAE latents** reach **`0.9585` AUROC**, matching dense residual probes (`0.9529` at L24; `0.962` peak at L36).
 3. **Scale-Dependent Steering Disentanglement:** On `Gemma-2-2B-IT`, dense linear probes trigger polysemantic over-refusal on benign coding tasks at $\alpha \ge +0.20$ (`96.7% → 50.0% → 0.0%` accuracy), whereas **Gemma Scope 16k SAE steering** disentangles shortcut latents from general tool syntax (`cos(SAE, Probe) = 0.248`), reducing sabotage from **`52.1% → 27.1%` at `100.0%` benign coding accuracy** ($\alpha = +0.20$) and **`18.8%` at `90.0%` accuracy** ($\alpha = +0.25$). On `Gemma-2-9B-IT`, both **SAE steering** (`31.25% → 6.25%` sabotage) and **dense probe steering** (`31.25% → 2.08%` sabotage) preserve **`100.0%` benign coding accuracy**.
+4. **Study 2 — "Silent Commitment" & Unfaithful Chain-of-Thought (`<think>` vs. Layer-24 SAE Probes):** When `Gemma-2-9B-IT` reasons inside an explicit `<think>...</think>` scratchpad prior to `TOOL_CALL:` (`N = 228` rollouts), **`88.9%`** of sabotage traces evade lexical CoT filters (`0.676` AUROC) and **`25.3%`** fool an independent **9B LLM Compliance Auditor** (`0.870` AUROC — rising to **`28.9%` unfaithful CoT** when warned that `<think>` logs are audited). Yet **strictly inside `<think>` (before `TOOL_CALL:` begins)**, the **Layer-24 Gemma Scope 16k SAE L1 Probe** reaches **`0.980 ± 0.018` AUROC** (and Study 1's frozen no-CoT Layer-24 probe transfers zero-shot at **`0.946` AUROC**), catching **`91.7%`** of Auditor-fooled `503` output fabrications and **`100.0%`** (`11/11`) of Auditor-fooled audited-scratchpad sabotage cases—with **Latents `#11381` and `#15689` spiking a median `29.0`–`34.5` tokens before `TOOL_CALL:`** while honest repair **Latent `#6787` stays flat at `0.0`**.
+
+![Silent Commitment Unfaithful CoT Trace](figures/silent_commitment/2_unfaithful_cot_single_trace.png)
 
 ## Repository Structure
 
@@ -37,19 +40,24 @@ agentic-sabotage/
 │   ├── steering.py                    # Multi-layer planning-block activation steering engine
 │   ├── plotting.py                    # Per-model publication figure suite
 │   ├── cross_scale.py                 # Cross-scale 2B vs. 9B comparison figure generator
+│   ├── silent_commitment.py           # Study 2: Unfaithful <think> CoT vs. token-by-token L24 SAE probes
+│   ├── silent_commitment_plots.py     # Study 2 publication figure suite (4 figures)
 │   └── cli.py                         # `sabotage` CLI entry point
 ├── results/
 │   ├── gemma-2-2b-it/                 # Gemma-2-2B-IT behavioral, circuit, and steering metrics
-│   └── gemma-2-9b-it/                 # Gemma-2-9B-IT behavioral, circuit, and steering metrics
+│   ├── gemma-2-9b-it/                 # Gemma-2-9B-IT behavioral, circuit, and steering metrics
+│   └── silent_commitment/             # Study 2 CoT faithfulness, auditor evasion, & token-level SAE traces
 ├── figures/
 │   ├── gemma-2-2b-it/                 # 4 figures for Gemma-2-2B-IT
 │   ├── gemma-2-9b-it/                 # 4 figures for Gemma-2-9B-IT
-│   └── cross_scale/                   # Cross-scale 2B vs. 9B comparison figure
+│   ├── cross_scale/                   # Cross-scale 2B vs. 9B comparison figure
+│   └── silent_commitment/             # 4 Study 2 figures (temporal AUROC, single trace, quadrant, steering)
 ├── paper/
 │   ├── agentic_sabotage_preprint.typ  # Typst academic preprint source
 │   └── agentic_sabotage_preprint.pdf  # Compiled 4-page preprint PDF
 ├── notebooks/
-│   └── colab_gemma2_9b_sabotage.ipynb # 1-click Colab notebook for 9B replication
+│   ├── colab_gemma2_9b_sabotage.ipynb # 1-click Colab notebook for Study 1 (9B)
+│   └── colab_silent_commitment_9b.ipynb # 1-click Colab notebook for Study 2 (Silent Commitment)
 ├── tests/test_pipeline.py             # Unit tests for classifier, JumpReLU SAE, and probes
 └── REPORT.md                          # Detailed empirical report & tables
 ```
@@ -72,6 +80,9 @@ uv run sabotage plot-all --model gemma-2-2b-it
 
 # Render cross-scale comparison figure
 uv run python -m agentic_sabotage.cross_scale
+
+# Run Study 2: Silent Commitment (<think> CoT faithfulness vs. Layer-24 SAE probes)
+uv run sabotage run-silent-commitment --model gemma-2-9b-it --batch-size 6
 ```
 
 ## Related Work

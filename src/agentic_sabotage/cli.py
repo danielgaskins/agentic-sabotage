@@ -22,6 +22,8 @@ from .plotting import (
 )
 from .probes import analyze_sae_features, fit_layer_probe
 from .sae_loader import load_gemma_scope_sae
+from .silent_commitment import run_silent_commitment_study
+from .silent_commitment_plots import plot_silent_commitment_suite
 from .steering import evaluate_steering_condition
 
 
@@ -318,7 +320,79 @@ def build_parser() -> argparse.ArgumentParser:
     pl = sub.add_parser("plot-all")
     pl.add_argument("--model", choices=list(MODEL_SPECS.keys()), default="gemma-2-2b-it")
 
+    sc = sub.add_parser("run-silent-commitment")
+    sc.add_argument("--model", choices=list(MODEL_SPECS.keys()), default="gemma-2-9b-it")
+    sc.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    sc.add_argument("--n-fabrication", type=int, default=35)
+    sc.add_argument("--n-tampering", type=int, default=35)
+    sc.add_argument("--n-other-per-cat", type=int, default=10)
+    sc.add_argument("--n-audited-per-focus-cat", type=int, default=24)
+    sc.add_argument("--n-steer-eval", type=int, default=36)
+    sc.add_argument("--batch-size", type=int, default=8)
+    sc.add_argument("--seed", type=int, default=42)
+
+    scp = sub.add_parser("plot-silent-commitment")
+    scp.add_argument("--model", choices=list(MODEL_SPECS.keys()), default="gemma-2-9b-it")
+
     return p
+
+
+def cmd_run_silent_commitment(args: argparse.Namespace) -> None:
+    paths = Paths().ensure()
+    spec = MODEL_SPECS[args.model]
+    model_res_dir = paths.results_dir / spec.name
+    directions_npz = model_res_dir / "steering_directions.npz"
+    if not directions_npz.is_file():
+        raise FileNotFoundError(f"Missing Study-1 directions at {directions_npz}; run analyze-circuits first.")
+
+    scenarios = _load_jsonl(paths.data_dir / "sabotage_benchmark.jsonl")
+    model, tokenizer, resolved_repo = load_target_model(spec, device=args.device)
+    print(f"[OK] Loaded {spec.name} ({resolved_repo}) for Silent Commitment study")
+
+    sae_l24 = load_gemma_scope_sae(
+        repo_id=spec.sae_release,
+        layer=spec.default_steer_layer,
+        device=args.device,
+    )
+    print(f"[OK] Loaded Gemma Scope SAE L{spec.default_steer_layer} ({sae_l24.npz_path})")
+
+    report = run_silent_commitment_study(
+        model=model,
+        tokenizer=tokenizer,
+        sae_l24=sae_l24,
+        all_scenarios=scenarios,
+        directions_npz_path=directions_npz,
+        n_fabrication=args.n_fabrication,
+        n_tampering=args.n_tampering,
+        n_other_per_cat=args.n_other_per_cat,
+        n_audited_per_focus_cat=args.n_audited_per_focus_cat,
+        n_steer_eval=args.n_steer_eval,
+        batch_size=args.batch_size,
+        seed=args.seed,
+    )
+    out_dir = paths.results_dir / "silent_commitment"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_json = out_dir / "silent_commitment_results.json"
+    out_json.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[OK] Saved Silent Commitment results -> {out_json}")
+
+    fig_dir = paths.figures_dir / "silent_commitment"
+    figs = plot_silent_commitment_suite(report, fig_dir)
+    print(f"[OK] Generated {len(figs)} Silent Commitment figures in {fig_dir}")
+
+    del model, sae_l24
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def cmd_plot_silent_commitment(args: argparse.Namespace) -> None:
+    paths = Paths().ensure()
+    res_json = paths.results_dir / "silent_commitment" / "silent_commitment_results.json"
+    report = json.loads(res_json.read_text(encoding="utf-8"))
+    fig_dir = paths.figures_dir / "silent_commitment"
+    figs = plot_silent_commitment_suite(report, fig_dir)
+    print(f"[OK] Re-rendered {len(figs)} Silent Commitment figures in {fig_dir}")
 
 
 def main() -> None:
@@ -334,6 +408,10 @@ def main() -> None:
         cmd_run_steering(args)
     elif args.cmd == "plot-all":
         cmd_plot_all(args)
+    elif args.cmd == "run-silent-commitment":
+        cmd_run_silent_commitment(args)
+    elif args.cmd == "plot-silent-commitment":
+        cmd_plot_silent_commitment(args)
 
 
 if __name__ == "__main__":
