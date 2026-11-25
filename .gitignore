@@ -21,3 +21,4 @@ checkpoints/
 *.tar.gz
 *.npz
 !results/**/steering_directions.npz
+paper/arxiv_source/figs/

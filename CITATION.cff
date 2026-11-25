@@ -1,9 +1,10 @@
 cff-version: 1.2.0
-message: "If you use this benchmark, SAE circuit analysis, or steering code, please cite it using the metadata below."
-title: "Mechanistic Debugging of Agentic Sabotage and Tool-Call Hallucinations: Cross-Scale Sparse Autoencoder Circuits in Multi-Turn Tool Use"
+message: "If you use this benchmark, SAE circuit analysis, or closed-loop circuit-breaker code, please cite it using the metadata below."
+title: "Mechanistic Debugging of Agentic Sabotage and Unfaithful Chain-of-Thought: Sparse Autoencoder Circuits, Silent Commitment & Probe-Gated Circuit Breakers"
 type: software
-version: 0.1.0
-date-released: "2026-11-23"
+version: 1.0.0
+doi: 10.5281/zenodo.24520830
+date-released: "2026-11-24"
 license: MIT
 url: "https://danielgaskins.com/agentic-sabotage.html"
 repository-code: "https://github.com/danielgaskins/agentic-sabotage"
@@ -15,7 +16,8 @@ authors:
 keywords:
   - mechanistic interpretability
   - sparse autoencoders
+  - chain-of-thought faithfulness
+  - circuit breakers
   - activation steering
   - AI safety
-  - tool-use agents
   - Gemma Scope
