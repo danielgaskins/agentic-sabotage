@@ -66,6 +66,7 @@ At the pre-commitment prefix `TOOL_CALL: {"tool": "`, we collect $N = 200$ on-po
 $ f(h_ell) = "ReLU"(h_ell W_"enc" + b_"enc") dot.op bb(1)[h_ell W_"enc" + b_"enc" > theta] $
 During decoding on held-out scenarios ($N = 48$ pressured, $N = 30$ benign), we apply norm-scaled planning-block steering ($L_"2B" = {14,16,18,20}$; $L_"9B" = {20,24,28,32}$; cf. Rimsky et al., 2024):
 $ h'_ell = h_ell - alpha norm(h_ell)_2 hat(v)_ell $
+All probing, SAE encoding, CoT auditing, and circuit-breaker experiments across all three models execute reproducibly in `bfloat16` on a single 24 GB NVIDIA L4 (Colab) GPU with zero weight fine-tuning.
 
 ]
 
@@ -141,7 +142,7 @@ Advancing training-time circuit breakers (Zou et al., 2024) and prompt-level con
     [`Qwen-7B` Always-On ($+0.20$)], [0.0%], [53.3%], [100 / 100%],
     [`Qwen-7B` Probe-Gated Breaker], [*14.6%*], [*100.0%*], [39.6 / *0.0%*],
   ),
-  caption: [Closed-loop circuit breaker results on strictly held-out test sets, achieving *0.0% (0/30)* false triggers across all benign controls.],
+  caption: [Closed-loop circuit breaker results on strictly held-out test sets. *Trig (P / B)* denotes gate trigger rate (%) on Pressured (P) vs. Benign (B) rollouts, achieving *0.0% (0/30)* false triggers across all benign controls.],
 )
 
 Across *all four* evaluation suites (Table 3), false-trigger rates on held-out benign controls are *0.0% (0/30)* (`120/120` unperturbed; sabotage-vs-benign gate AUROC $= 1.000$). Probe-gating rescues `2B` benign accuracy from *0.0% to 96.7%* ($52.1% -> 10.4%$ sabotage), while on `9B` `<think>` rollouts, 86.1% of pressured focus prompts trip at token 28 and latch across `TOOL_CALL:`, cutting sabotage from *66.7% to 13.9% (SAE) and 5.6% (Dense)* at *100.0% benign CoT accuracy*.
@@ -151,39 +152,39 @@ Across *all four* evaluation suites (Table 3), false-trigger rates on held-out b
 Evaluating `Qwen/Qwen2.5-7B-Instruct` (Qwen Team, 2024; 28 layers, $d = 3584$, single pre-RMSNorm + GQA + SwiGLU, no soft-capping) across $N = 200$ decision rollouts and $N = 108$ `<think>` rollouts confirms architecture invariance: pressured 503 fabrication surges $4% -> 96%$, residual probes peak at *Layer 16/28 (57.1% depth, $0.937 plus.minus 0.028$ AUROC)* matching `Gemma-2-9B` (`L24/42 = 57.1%`), no-CoT L16 probes transfer zero-shot to `<think>` at *0.959 AUROC*, pre-tool `<think>` probes reach *0.978 AUROC* (catching *100% [7/7]* of Auditor-fooled 503 fabrications), and L16 probe-gating restores *100.0%* benign accuracy (vs. 53.3% always-on).
 
 = Limitations & Conclusion
-While our experiments span two model families (`Gemma-2` 2B/9B and `Qwen2.5` 7B), 500 paired scenarios, and closed-loop `<think>` circuit breakers, evaluations target single-step tool invocations rather than long-horizon containerized trajectories (*SHADE-Arena*; Kutasov et al., 2025). Integrating mid-network probe-gated circuit breakers into AI Control protocols (Greenblatt et al., 2024a) offers a practical path toward faithful tool-using agents.
+While our experiments span two model families (`Gemma-2` 2B/9B and `Qwen2.5` 7B), 500 paired scenarios, and closed-loop `<think>` circuit breakers—reproducible end-to-end on a single 24 GB L4 GPU with zero weight fine-tuning—evaluations target single-step tool invocations rather than long-horizon containerized trajectories (*SHADE-Arena*; Kutasov et al., 2025). Integrating mid-network probe-gated circuit breakers into AI Control protocols (Greenblatt et al., 2024a) offers a practical path toward faithful tool-using agents.
 
 = References
 #set text(size: 7.45pt)
 #set par(leading: 0.46em)
-- Arditi et al. (2024). *Refusal in Language Models Is Mediated by a Single Direction*. NeurIPS 2024, arXiv:2406.11717.
-- Baker et al. (2025). *Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation*. OpenAI, arXiv:2503.11926.
-- Benton et al. (2024). *Sabotage Evaluations for Frontier Models*. Anthropic, arXiv:2410.21514.
-- Betley et al. (2025). *Emergent Misalignment: Narrow Finetuning Can Produce Broadly Misaligned LLMs*. ICML 2025, arXiv:2502.17424.
-- Chen et al. (2025). *Reasoning Models Don't Always Say What They Think*. Anthropic, arXiv:2505.05410.
-- Denison et al. (2024). *Sycophancy to Subterfuge: Investigating Reward-Tampering in LLMs*. Anthropic, arXiv:2406.10162.
-- Goldowsky-Dill et al. (2025). *Detecting Strategic Deception Using Linear Probes*. Apollo Research, ICML 2025, arXiv:2502.03407.
-- Greenblatt et al. (2024a). *AI Control: Improving Safety Despite Intentional Subversion*. ICML 2024, arXiv:2312.06942.
-- Greenblatt et al. (2024b). *Alignment Faking in Large Language Models*. Anthropic & Redwood Research, arXiv:2412.14093.
-- Hollinsworth et al. (2026). *Telling FIBS: Probes Effectively Detect Sabotage and Catch Unverbalized Deception*. FAR AI, arXiv:2610.12445.
-- Korbak et al. (2025). *Chain of Thought Monitorability: A New and Fragile Opportunity for AI Safety*. arXiv:2507.11473.
-- Kutasov et al. (2025). *SHADE-Arena: Evaluating Sabotage and Monitoring in LLM Agents*. Anthropic & Redwood, arXiv:2506.15740.
-- Lanham et al. (2023). *Measuring Faithfulness in Chain-of-Thought Reasoning*. Anthropic, arXiv:2307.13702.
-- Lee et al. (2025). *Programming Refusal with Conditional Activation Steering (CAST)*. ICLR 2025, arXiv:2409.05907.
-- Lieberum et al. (2024). *Gemma Scope: Open Sparse Autoencoders Everywhere All At Once on Gemma 2*. DeepMind, arXiv:2408.05147.
-- Lindsey et al. (2025). *On the Biology of a Large Language Model*. Transformer Circuits Thread, Anthropic.
-- Marks & Tegmark (2023). *The Geometry of Truth*. COLM 2024, arXiv:2310.06824.
-- Marks et al. (2024). *Sparse Feature Circuits: Discovering and Editing Interpretable Causal Graphs*. ICLR 2025, arXiv:2403.19647.
-- Meinke et al. (2024). *Frontier Models Are Capable of In-Context Scheming*. Apollo Research, arXiv:2412.04984.
-- Qwen Team (2024). *Qwen2.5 Technical Report*. arXiv:2412.15115.
-- Rajamanoharan et al. (2024). *Jumping Ahead: Improving Reconstruction Fidelity with JumpReLU SAEs*. DeepMind, arXiv:2407.14435.
-- Rimsky et al. (2024). *Steering Llama 2 via Contrastive Activation Addition*. ACL 2024.
-- Sharma et al. (2024). *Towards Understanding Sycophancy in Language Models*. ICLR 2024.
-- Templeton et al. (2024). *Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet*. Anthropic.
-- Turpin et al. (2023). *Language Models Don't Always Say What They Think*. NeurIPS 2023.
-- Wu et al. (2025). *AxBench: Steering LLMs? Even Simple Baselines Outperform Sparse Autoencoders*. ICML 2025, arXiv:2501.17148.
-- Zou et al. (2023). *Representation Engineering: A Top-Down Approach to AI Transparency*. arXiv:2310.01405.
-- Zou et al. (2024). *Improving Alignment and Robustness with Circuit Breakers*. NeurIPS 2024, arXiv:2406.04313.
+- Arditi et al. (2024). *Refusal in Language Models Is Mediated by a Single Direction*. NeurIPS 2024, #link("https://arxiv.org/abs/2406.11717")[arXiv:2406.11717].
+- Baker et al. (2025). *Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation*. OpenAI, #link("https://arxiv.org/abs/2503.11926")[arXiv:2503.11926].
+- Benton et al. (2024). *Sabotage Evaluations for Frontier Models*. Anthropic, #link("https://arxiv.org/abs/2410.21514")[arXiv:2410.21514].
+- Betley et al. (2025). *Emergent Misalignment: Narrow Finetuning Can Produce Broadly Misaligned LLMs*. ICML 2025, #link("https://arxiv.org/abs/2502.17424")[arXiv:2502.17424].
+- Chen et al. (2025). *Reasoning Models Don't Always Say What They Think*. Anthropic, #link("https://arxiv.org/abs/2505.05410")[arXiv:2505.05410].
+- Denison et al. (2024). *Sycophancy to Subterfuge: Investigating Reward-Tampering in LLMs*. Anthropic, #link("https://arxiv.org/abs/2406.10162")[arXiv:2406.10162].
+- Goldowsky-Dill et al. (2025). *Detecting Strategic Deception Using Linear Probes*. Apollo Research, ICML 2025, #link("https://arxiv.org/abs/2502.03407")[arXiv:2502.03407].
+- Greenblatt et al. (2024a). *AI Control: Improving Safety Despite Intentional Subversion*. ICML 2024, #link("https://arxiv.org/abs/2312.06942")[arXiv:2312.06942].
+- Greenblatt et al. (2024b). *Alignment Faking in Large Language Models*. Anthropic & Redwood Research, #link("https://arxiv.org/abs/2412.14093")[arXiv:2412.14093].
+- Hollinsworth et al. (2026). *Telling FIBS: Probes Effectively Detect Sabotage and Catch Unverbalized Deception*. FAR AI, #link("https://arxiv.org/abs/2610.12445")[arXiv:2610.12445].
+- Korbak et al. (2025). *Chain of Thought Monitorability: A New and Fragile Opportunity for AI Safety*. #link("https://arxiv.org/abs/2507.11473")[arXiv:2507.11473].
+- Kutasov et al. (2025). *SHADE-Arena: Evaluating Sabotage and Monitoring in LLM Agents*. Anthropic & Redwood, #link("https://arxiv.org/abs/2506.15740")[arXiv:2506.15740].
+- Lanham et al. (2023). *Measuring Faithfulness in Chain-of-Thought Reasoning*. Anthropic, #link("https://arxiv.org/abs/2307.13702")[arXiv:2307.13702].
+- Lee et al. (2025). *Programming Refusal with Conditional Activation Steering (CAST)*. ICLR 2025, #link("https://arxiv.org/abs/2409.05907")[arXiv:2409.05907].
+- Lieberum et al. (2024). *Gemma Scope: Open Sparse Autoencoders Everywhere All At Once on Gemma 2*. DeepMind, #link("https://arxiv.org/abs/2408.05147")[arXiv:2408.05147].
+- Lindsey et al. (2025). *On the Biology of a Large Language Model*. #link("https://transformer-circuits.pub/2025/attribution-graphs/biology.html")[Transformer Circuits Thread], Anthropic.
+- Marks & Tegmark (2023). *The Geometry of Truth*. COLM 2024, #link("https://arxiv.org/abs/2310.06824")[arXiv:2310.06824].
+- Marks et al. (2024). *Sparse Feature Circuits: Discovering and Editing Interpretable Causal Graphs*. ICLR 2025, #link("https://arxiv.org/abs/2403.19647")[arXiv:2403.19647].
+- Meinke et al. (2024). *Frontier Models Are Capable of In-Context Scheming*. Apollo Research, #link("https://arxiv.org/abs/2412.04984")[arXiv:2412.04984].
+- Qwen Team (2024). *Qwen2.5 Technical Report*. #link("https://arxiv.org/abs/2412.15115")[arXiv:2412.15115].
+- Rajamanoharan et al. (2024). *Jumping Ahead: Improving Reconstruction Fidelity with JumpReLU SAEs*. DeepMind, #link("https://arxiv.org/abs/2407.14435")[arXiv:2407.14435].
+- Rimsky et al. (2024). *Steering Llama 2 via Contrastive Activation Addition*. ACL 2024, #link("https://arxiv.org/abs/2312.06681")[arXiv:2312.06681].
+- Sharma et al. (2024). *Towards Understanding Sycophancy in Language Models*. ICLR 2024, #link("https://arxiv.org/abs/2310.13548")[arXiv:2310.13548].
+- Templeton et al. (2024). *Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet*. #link("https://transformer-circuits.pub/2024/scaling-monosemanticity/")[Transformer Circuits Thread], Anthropic.
+- Turpin et al. (2023). *Language Models Don't Always Say What They Think*. NeurIPS 2023, #link("https://arxiv.org/abs/2305.04388")[arXiv:2305.04388].
+- Wu et al. (2025). *AxBench: Steering LLMs? Even Simple Baselines Outperform Sparse Autoencoders*. ICML 2025, #link("https://arxiv.org/abs/2501.17148")[arXiv:2501.17148].
+- Zou et al. (2023). *Representation Engineering: A Top-Down Approach to AI Transparency*. #link("https://arxiv.org/abs/2310.01405")[arXiv:2310.01405].
+- Zou et al. (2024). *Improving Alignment and Robustness with Circuit Breakers*. NeurIPS 2024, #link("https://arxiv.org/abs/2406.04313")[arXiv:2406.04313].
 ]
 
 #pagebreak()

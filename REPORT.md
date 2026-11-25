@@ -2,7 +2,7 @@
 
 **Author:** [Daniel Gaskins](https://danielgaskins.com/) (`hello@danielgaskins.com`) · **Case Study:** [danielgaskins.com/agentic-sabotage.html](https://danielgaskins.com/agentic-sabotage.html) · **Repository:** [github.com/danielgaskins/agentic-sabotage](https://github.com/danielgaskins/agentic-sabotage)
 
-**Models Evaluated (`bfloat16`):**
+**Models Evaluated (`bfloat16`, Single 24 GB NVIDIA L4 / Colab GPU, Zero Weight Fine-Tuning):**
 - **`Gemma-2-2B-IT` + `Gemma Scope 2B 16k JumpReLU SAEs`** (`Layers 14, 16, 18, 20`)
 - **`Gemma-2-9B-IT` + `Gemma Scope 9B 16k JumpReLU SAEs`** (`Layers 20, 24, 28, 32`)
 - **`Qwen/Qwen2.5-7B-Instruct`** (`Layers 14, 16, 18, 20` — Cross-Family Generalization Spot Check; standard single pre-RMSNorm + GQA + SwiGLU architecture)
