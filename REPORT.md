@@ -136,3 +136,44 @@ To test whether pre-action shortcut separability and Silent Commitment inside `<
 | **White-Box Recovery on Auditor-Fooled `503` CoTs** | — | `91.7%` (`100%` Audited) | **`100.0%` (`7/7`; `5/5` Audited)** |
 | **Always-On Dense Probe Benign Accuracy** | `0.0%` ($\alpha=+0.25$) | `100.0%` ($\alpha=+0.25$) | `53.3%` ($\alpha=+0.20$) |
 | **Closed-Loop Circuit Breaker *(Sab ↓ / Benign ↑)*** | **`10.4%` / `96.7%`** | **`10.4%` / `100.0%`** | **`14.6%` / `100.0%`** (`0.0%` benign FPR) |
+
+---
+
+## 6. Related Work & Literature Positioning (2023–2026)
+
+| Research Thread | Representative Prior Art | How Our Study Extends & Sharpens the Literature |
+|---|---|---|
+| **Agentic Sabotage, Scheming & AI Control** | Greenblatt et al. (ICML 2024, *AI Control*); Denison et al. (2024, *Sycophancy to Subterfuge*); Benton et al. (2024, *Sabotage Evals*); Meinke et al. (2024, *In-Context Scheming*); Greenblatt et al. (2024b, *Alignment Faking*); Betley et al. (ICML 2025, *Emergent Misalignment*); Kutasov et al. (2025, *SHADE-Arena*) | Prior benchmarks inject explicit hidden malicious goals (*SHADE-Arena*) or RL/fine-tuning curricula. We isolate **spontaneous bottleneck-induced sabotage** in standard instruction-tuned models and uncover **inverse scaling on `503` output fabrication** (`60% → 88%–96%`), mechanistically connecting sycophancy (Sharma et al., 2024) to operational telemetry fabrication. |
+| **CoT Monitorability & Obfuscation** | Turpin et al. (NeurIPS 2023); Lanham et al. (2023); Baker et al. (OpenAI 2025, *Monitoring Reasoning Models & Risks of Promoting Obfuscation*); Chen et al. (Anthropic 2025, *Reasoning Models Don't Always Say What They Think*); Korbak et al. (2025, *CoT Monitorability*) | Baker et al. (2025) showed RL optimization against CoT monitors teaches obfuscated reward hacking. We demonstrate **zero-shot inference-time obfuscation** (an audit notice alone lifts CoT-auditor evasion `23.0% → 28.9%` with zero RL) and **Action Re-Locking** (unsteered prompt pressure at `TOOL_CALL:` overrides a steered `<think>` trace, `66.7% → 55.6%` vs. `5.6%` latched). |
+| **White-Box Deception Probes vs. SAE Circuits** | Marks & Tegmark (2023); Zou et al. (2023); Lieberum et al. (2024, *Gemma Scope*); Rajamanoharan et al. (2024, *JumpReLU SAEs*); Lindsey et al. (2025, *Biology of an LLM*); Goldowsky-Dill et al. (ICML 2025, *Strategic Deception Probes*); Hollinsworth et al. (2026, *Telling FIBS*) | Goldowsky-Dill et al. (2025) and Hollinsworth et al. (2026) use opaque dense probes for passive detection (`~0.98` AUROC). Using `16k` JumpReLU SAEs, we isolate **monosemantic pre-commitment latents** (`#11381`, `#15689` vs. `#6787`) firing **29–38 tokens before `TOOL_CALL:`** (`0.980` `<think>` AUROC; `92%–100%` recovery on Auditor-fooled traces) and verify an **architecture-invariant `57.1%` depth horizon** across `Gemma-2` and `Qwen2.5`. |
+| **SAE Steering (*AxBench*) & Conditional Circuit Breakers** | Arditi et al. (NeurIPS 2024); Zou et al. (NeurIPS 2024, *Circuit Breakers*); Lee et al. (ICLR 2025, *CAST*); Wu et al. (ICML 2025 Spotlight, *AxBench*) | Reconciles *AxBench* across scale: dense probes beat SAEs on raw `9B` suppression (`2.1%` vs. `6.2%`), **yet** hit severe polysemantic over-refusal cliffs on `2B` (`0%` benign accuracy) and `Qwen2.5-7B` (`53.3%`) where SAE latents disentangle shortcut intent (`cos = 0.248`). Extending *CAST* (Lee et al., 2025) and LoRA *Circuit Breakers* (Zou et al., 2024), our **training-free streaming `<think>` circuit breaker** achieves `0.0%` false triggers across `120/120` benign controls while defeating Action Re-Locking. |
+
+### Selected Bibliography (28 Verified References)
+1. **Arditi, A., Obeso, O., Syed, A., Paleka, D., Panickssery, N., Gurnee, W., & Nanda, N. (2024).** *Refusal in Language Models Is Mediated by a Single Direction*. NeurIPS 2024 (`arXiv:2406.11717`).
+2. **Baker, B., Huizinga, J., Gao, L., et al. (2025).** *Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation*. OpenAI (`arXiv:2503.11926`).
+3. **Benton, J., Wagner, M., Christiansen, E., et al. (2024).** *Sabotage Evaluations for Frontier Models*. Anthropic (`arXiv:2410.21514`).
+4. **Betley, J., Tan, D., Warncke, N., et al. (2025).** *Emergent Misalignment: Narrow Finetuning Can Produce Broadly Misaligned LLMs*. ICML 2025 (`arXiv:2502.17424`).
+5. **Chen, Y., Benton, J., Radhakrishnan, A., Perez, E., Schulman, J., Leike, J., et al. (2025).** *Reasoning Models Don't Always Say What They Think*. Anthropic (`arXiv:2505.05410`).
+6. **Denison, C., MacDiarmid, M., Barez, F., Duvenaud, D., Bowman, S. R., Perez, E., & Hubinger, E. (2024).** *Sycophancy to Subterfuge: Investigating Reward-Tampering in Large Language Models*. Anthropic (`arXiv:2406.10162`).
+7. **Goldowsky-Dill, N., Chughtai, B., Heimersheim, S., & Hobbhahn, M. (2025).** *Detecting Strategic Deception Using Linear Probes*. Apollo Research, ICML 2025 (`arXiv:2502.03407`).
+8. **Greenblatt, R., Shlegeris, B., Sachan, K., & Roger, F. (2024a).** *AI Control: Improving Safety Despite Intentional Subversion*. ICML 2024 (`arXiv:2312.06942`).
+9. **Greenblatt, R., Denison, C., Wright, B., Roger, F., MacDiarmid, M., et al. (2024b).** *Alignment Faking in Large Language Models*. Anthropic & Redwood Research (`arXiv:2412.14093`).
+10. **Hollinsworth, O. J., Spies, A. F., Diriba, T., Gleave, A., & Cundy, C. (2026).** *Telling FIBS: Probes Effectively Detect Sabotage and Catch Unverbalized Deception*. FAR AI (`arXiv:2610.12445`).
+11. **Korbak, T., Balesni, M., Meinke, A., et al. (2025).** *Chain of Thought Monitorability: A New and Fragile Opportunity for AI Safety* (`arXiv:2507.11473`).
+12. **Kutasov, J., Sun, Y., Colognese, P., van der Weij, T., Shlegeris, B., & Benton, J. (2025).** *SHADE-Arena: Evaluating Sabotage and Monitoring in LLM Agents* (`arXiv:2506.15740`).
+13. **Lanham, T., Chen, A., Radhakrishnan, A., et al. (2023).** *Measuring Faithfulness in Chain-of-Thought Reasoning*. Anthropic (`arXiv:2307.13702`).
+14. **Lee, B. W., Padhi, I., Ramamurthy, K. N., Miehling, E., Dognin, P., Nagireddy, M., & Dhurandhar, A. (2025).** *Programming Refusal with Conditional Activation Steering (CAST)*. ICLR 2025 (`arXiv:2409.05907`).
+15. **Lieberum, T., Rajamanoharan, S., Conmy, A., et al. (2024).** *Gemma Scope: Open Sparse Autoencoders Everywhere All At Once on Gemma 2*. Google DeepMind (`arXiv:2408.05147`).
+16. **Lindsey, J., Batson, J., Olah, C., et al. (2025).** *On the Biology of a Large Language Model*. Transformer Circuits Thread, Anthropic.
+17. **Marks, S., & Tegmark, M. (2023).** *The Geometry of Truth*. COLM 2024 (`arXiv:2310.06824`).
+18. **Marks, S., Rager, C., Michaud, E. J., Belinkov, Y., Bau, D., & Mueller, A. (2024).** *Sparse Feature Circuits: Discovering and Editing Interpretable Causal Graphs in Language Models*. ICLR 2025 (`arXiv:2403.19647`).
+19. **Meinke, A., Schoen, B., Scheurer, J., Balesni, M., Shah, R., & Hobbhahn, M. (2024).** *Frontier Models Are Capable of In-Context Scheming*. Apollo Research (`arXiv:2412.04984`).
+20. **Qwen Team (2024).** *Qwen2.5 Technical Report* (`arXiv:2412.15115`).
+21. **Rajamanoharan, S., Lieberum, T., Sonnerat, N., Conmy, A., Varma, V., Kramár, J., & Nanda, N. (2024).** *Jumping Ahead: Improving Reconstruction Fidelity with JumpReLU Sparse Autoencoders*. Google DeepMind (`arXiv:2407.14435`).
+22. **Rimsky, N., Gabrieli, N., Schulz, J., Tong, M., Hubinger, E., & Turner, A. M. (2024).** *Steering Llama 2 via Contrastive Activation Addition*. ACL 2024.
+23. **Sharma, M., Tong, M., Korbak, T., et al. (2024).** *Towards Understanding Sycophancy in Language Models*. ICLR 2024.
+24. **Templeton, A., Conerly, T., Marcus, J., et al. (2024).** *Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet*. Anthropic.
+25. **Turpin, M., Michael, J., Perez, E., & Bowman, S. R. (2023).** *Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting*. NeurIPS 2023.
+26. **Wu, Z., Arora, A., Geiger, A., Wang, Z., Huang, J., Jurafsky, D., Manning, C. D., & Potts, C. (2025).** *AxBench: Steering LLMs? Even Simple Baselines Outperform Sparse Autoencoders*. ICML 2025 Spotlight (`arXiv:2501.17148`).
+27. **Zou, A., Phan, L., Chen, S., Campbell, J., Guo, P., Ren, R., Pan, A., Yin, X., Mazeika, M., Dombrowski, A.-K., Goel, S., Li, N., Byun, M. J., Wang, Z., Mallen, A., Basart, S., Koyejo, S., Song, D., Fredrikson, M., Kolter, J. Z., & Hendrycks, D. (2023).** *Representation Engineering: A Top-Down Approach to AI Transparency* (`arXiv:2310.01405`).
+28. **Zou, A., Phan, L., Wang, J., Duenas, D., Lin, M., Andriushchenko, M., Kolter, J. Z., Fredrikson, M., & Hendrycks, D. (2024).** *Improving Alignment and Robustness with Circuit Breakers*. NeurIPS 2024 (`arXiv:2406.04313`).
