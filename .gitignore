@@ -22,3 +22,4 @@ checkpoints/
 *.npz
 !results/**/steering_directions.npz
 paper/arxiv_source/figs/
+videos/
