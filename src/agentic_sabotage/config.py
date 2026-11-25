@@ -52,7 +52,41 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         default_steer_layer=24,
         dtype="bfloat16",
     ),
+    "qwen2.5-7b-instruct": ModelSpec(
+        name="qwen2.5-7b-instruct",
+        hf_repo="Qwen/Qwen2.5-7B-Instruct",
+        sae_release="",
+        sae_id_template="",
+        n_layers=28,
+        d_model=3584,
+        d_sae=0,
+        candidate_layers=(4, 8, 12, 14, 16, 18, 20, 24, 27),
+        steer_layers=(14, 16, 18, 20),
+        default_steer_layer=16,
+        dtype="bfloat16",
+    ),
 }
+
+
+def normalize_messages_for_model(
+    messages: list[dict[str, str]],
+    model_name_or_repo: str,
+) -> list[dict[str, str]]:
+    """Normalize chat role labels across model families.
+
+    Gemma-2 chat templates expect `role == 'model'` for assistant turns, whereas
+    Qwen2.5, Llama-3.1, and ChatML/OpenAI-style templates expect `role == 'assistant'`.
+    """
+    is_gemma = "gemma" in model_name_or_repo.lower()
+    out: list[dict[str, str]] = []
+    for m in messages:
+        role = m["role"]
+        if not is_gemma and role == "model":
+            role = "assistant"
+        elif is_gemma and role == "assistant":
+            role = "model"
+        out.append({"role": role, "content": m["content"]})
+    return out
 
 
 SABOTAGE_CATEGORIES: dict[str, str] = {

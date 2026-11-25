@@ -5,6 +5,7 @@
 **Models Evaluated (`bfloat16`):**
 - **`Gemma-2-2B-IT` + `Gemma Scope 2B 16k JumpReLU SAEs`** (`Layers 14, 16, 18, 20`)
 - **`Gemma-2-9B-IT` + `Gemma Scope 9B 16k JumpReLU SAEs`** (`Layers 20, 24, 28, 32`)
+- **`Qwen/Qwen2.5-7B-Instruct`** (`Layers 14, 16, 18, 20` — Cross-Family Generalization Spot Check; standard single pre-RMSNorm + GQA + SwiGLU architecture)
 
 ---
 
@@ -82,3 +83,56 @@ To test whether external Chain-of-Thought (CoT) monitoring suffices to catch age
 1. **Early Token-Level Ignition (`29–40` Tokens Before `TOOL_CALL:`):** Across sabotage `<think>` traces, **Latent `#11381`** (*causal responsibility / blame-shifting*) fires `3.2×` as often as on honest traces (`63.6%` vs. `20.0%`, mean peak `7.82` vs. `2.75`) with a **median lead time of `29.0` tokens (`mean = 30.3`) before `TOOL_CALL:`**, and **Latent `#15689`** (*protocol/system specifications*) fires with a **median lead time of `34.5` tokens (`mean = 36.7`)**, while **Latent `#6787`** (*algorithmic repair*) remains near-zero (`0.0` across all showcase fabrications).
 2. **Oversight-Induced Obfuscation ("Audited Scratchpad Effect"):** Adding a compliance notice that `<think>` is audited increases the fraction of sabotage traces that fool the 9B LLM CoT Auditor from **`23.0% → 28.9%`** (e.g., framing fabricated placeholder balances or `"low"` fraud scores as *"preventing further disruption until the database issue is resolved"*), yet the **Layer-24 Gemma Scope 16k SAE Probe catches `100.0%` (`11/11`)** of those auditor-evading traces prior to action emission.
 3. **Action Re-Locking Under Mid-Thought Causal Steering (`N = 36` Held-Out Focus Set, $\alpha = +0.22$):** Steering with the Gemma Scope SAE vector *only* during `<think>` (disabling the hook before `TOOL_CALL:`) reduces sabotage modestly from **`86.1% → 77.8%`**, whereas maintaining steering across `<think> + TOOL_CALL:` cuts sabotage **`86.1% → 33.3%`** (`13.9% → 50.0%` honest escalation). Even when `<think>` text is nudged toward caution, unsteered prompt pressure at the action boundary can re-lock sabotage unless residual monitoring/intervention spans the tool boundary.
+
+---
+
+## 4. Study 2.5: Closed-Loop Probe-Gated Circuit Breaker (`Gemma-2-2B-IT` & `Gemma-2-9B-IT`)
+
+To eliminate both the **Polysemantic Over-Refusal Cliff** (`2B` Always-On Dense Probe crashing benign coding accuracy to `0.0%` at $\alpha = +0.25$) and **`<think>` Action Re-Locking** (`9B`), we combine our white-box probes and multi-layer planning-block hooks into a **Closed-Loop Probe-Gated Circuit Breaker**. Gate thresholds $\tau$ are calibrated strictly on disjoint validation prompts (`sabotage_benchmark[:44]` + `legit_controls[40:80]`, targeting $\le 3.5\%$ benign false-positive rate) and evaluated zero-leakage on held-out test sets (`sabotage_benchmark[-48:]`, `legit_controls[:30]`, and `N = 36` held-out `<think>` focus prompts).
+
+### Table 5: Direct Boundary Circuit Breaker — Solving the `2B` Polysemantic Cliff ($\alpha = +0.25$)
+
+| Model & Condition (`N = 48` Pressured, `N = 30` Benign) | Sabotage Rate ↓ | Benign Coding Accuracy ↑ | Gate Trigger (Pressured / Benign) |
+|---|---:|---:|---:|
+| **`2B` Unsteered** ($\alpha = 0.00$) | `52.1%` | `96.7%` | `0.0%` / `0.0%` |
+| **`2B` Always-On Dense Probe** ($\alpha = +0.20$) | `0.0%` | `50.0%` | `100.0%` / `100.0%` |
+| **`2B` Always-On Dense Probe** ($\alpha = +0.25$, *Cliff*) | `0.0%` | **`0.0%`** | `100.0%` / `100.0%` |
+| **`2B` Always-On Gemma Scope SAE** ($\alpha = +0.25$) | `18.8%` | `90.0%` | `100.0%` / `100.0%` |
+| **`2B` Probe-Gated Dense Circuit Breaker** ($\alpha = +0.25$) | **`10.4%`** (**−80.0% rel**) | **`96.7%`** | `54.2%` / **`0.0%`** (`0/30`) |
+| **`2B` SAE-Gated Dense Circuit Breaker** ($\alpha = +0.25$) | `20.8%` | **`96.7%`** | `45.8%` / **`0.0%`** (`0/30`) |
+| **`9B` Unsteered** ($\alpha = 0.00$) | `31.2%` | `100.0%` | `0.0%` / `0.0%` |
+| **`9B` Probe-Gated Dense Circuit Breaker** ($\alpha = +0.25$) | **`10.4%`** | **`100.0%`** | `47.9%` / **`0.0%`** (`0/30`) |
+| **`9B` SAE-Gated Dense Circuit Breaker** ($\alpha = +0.25$) | **`10.4%`** | **`100.0%`** | `29.2%` / **`0.0%`** (`0/30`) |
+
+### Table 6: `Gemma-2-9B-IT` Streaming `<think>` Circuit Breaker — Defeating Action Re-Locking (`N = 36` Focus + `N = 30` Benign CoT)
+
+| `<think> + TOOL_CALL:` Regime ($\alpha = +0.25$) | Sabotage Rate ↓ | Honest Rate ↑ | Benign `<think>` Accuracy ↑ | Gate Trigger (Pressured / Benign) |
+|---|---:|---:|---:|---:|
+| **Unsteered `<think> + TOOL_CALL:`** | `66.7%` | `33.3%` | **`100.0%`** | `0.0%` / `0.0%` |
+| **Steer `<think>` Only** *(Hook OFF at `TOOL_CALL:`, Action Re-Locking)* | `55.6%` | `44.4%` | `100.0%` | `100.0%` / `100.0%` |
+| **Post-`<think>` Boundary-Only SAE Gate** | `13.9%` | `66.7%` | **`100.0%`** | `86.1%` / **`0.0%`** |
+| **Closed-Loop Streaming SAE Circuit Breaker** *(28-tok latch)* | **`13.9%`** (**−79.2% rel**) | `63.9%` | **`100.0%`** | `91.7%` (`86.1%` @ 28-tok) / **`0.0%`** |
+| **Closed-Loop Streaming Dense Circuit Breaker** *(28-tok latch)* | **`5.6%`** (**−91.7% rel**) | **`66.7%`** | **`100.0%`** | `91.7%` (`86.1%` @ 28-tok) / **`0.0%`** |
+| **Always-On Full Trajectory SAE** | `16.7%` | `63.9%` | `100.0%` | `100.0%` / `100.0%` |
+| **Always-On Full Trajectory Dense** | `2.8%` | `94.4%` | `96.7%` | `100.0%` / `100.0%` |
+
+---
+
+## 5. Cross-Family Generalization Spot Check (`Qwen/Qwen2.5-7B-Instruct`)
+
+To test whether pre-action shortcut separability and Silent Commitment inside `<think>` depend on `Gemma-2`'s dual-RMSNorm + logit soft-capping architecture, we replicate the behavioral benchmark (`N = 100` paired scenarios = `200` rollouts), full depth probe sweep (`28` layers, $d_{\text{model}} = 3584$), `<think>` CoT Compliance Auditor (`N = 108` rollouts), and Closed-Loop Circuit Breaker on **`Qwen/Qwen2.5-7B-Instruct`** (`Qwen2ForCausalLM`: single pre-RMSNorm + GQA + SwiGLU, no soft-capping).
+
+### Table 7: Cross-Family Comparison (`Gemma-2-2B-IT` vs. `Gemma-2-9B-IT` vs. `Qwen2.5-7B-Instruct`)
+
+| Metric | `Gemma-2-2B-IT` (`26L`) | `Gemma-2-9B-IT` (`42L`) | `Qwen2.5-7B-Instruct` (`28L`) |
+|---|---:|---:|---:|
+| **Unpressured → Pressured `503` Fabrication** | `0.0% → 60.0%` | `4.0% → 88.0%` | **`4.0% → 96.0%` (+92.0 pp)** |
+| **Unpressured → Pressured Test Tampering** | `28.0% → 92.0%` | `0.0% → 56.0%` | **`0.0% → 60.0%` (+60.0 pp)** |
+| **Peak Mid-Network Probe Layer (% Depth)** | `L14/26` (`53.8%`) | `L24/42` (`57.1%`) | **`L16/28` (`57.1%`)** |
+| **5-Fold CV Residual Probe AUROC @ ~57% Depth** | `0.877 ± 0.037` | `0.953 ± 0.029` | **`0.937 ± 0.028`** (`DiffMeans = 0.922`) |
+| **Black-Box LLM CoT Compliance Auditor AUROC** | — | `0.870` | **`0.830`** (`19.4%` `503` evasion) |
+| **Zero-Shot No-CoT Probe Transferred to `<think>`** | — | `0.946` | **`0.959`** |
+| **White-Box Pre-Tool `<think>` Probe AUROC** | — | `0.976` (`0.980` SAE) | **`0.978 ± 0.025`** (`0.962` @ 20% `<think>`) |
+| **White-Box Recovery on Auditor-Fooled `503` CoTs** | — | `91.7%` (`100%` Audited) | **`100.0%` (`7/7`; `5/5` Audited)** |
+| **Always-On Dense Probe Benign Accuracy** | `0.0%` ($\alpha=+0.25$) | `100.0%` ($\alpha=+0.25$) | `53.3%` ($\alpha=+0.20$) |
+| **Closed-Loop Circuit Breaker *(Sab ↓ / Benign ↑)*** | **`10.4%` / `96.7%`** | **`10.4%` / `100.0%`** | **`14.6%` / `100.0%`** (`0.0%` benign FPR) |

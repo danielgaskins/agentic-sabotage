@@ -5,7 +5,7 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/danielgaskins/agentic-sabotage/blob/main/notebooks/colab_gemma2_9b_sabotage.ipynb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-End-to-end mechanistic interpretability benchmark and codebase mapping **unauthorized shortcut-taking ("agentic sabotage") vs. honest escalation/repair** in multi-turn tool-using language models (`Gemma-2-2B-IT` and `Gemma-2-9B-IT`) using **Gemma Scope 16k JumpReLU Sparse Autoencoders (SAEs)** and **Residual Linear Probes**.
+End-to-end mechanistic interpretability benchmark and codebase mapping **unauthorized shortcut-taking ("agentic sabotage") vs. honest escalation/repair** in multi-turn tool-using language models (`Gemma-2-2B-IT`, `Gemma-2-9B-IT`, and `Qwen2.5-7B-Instruct`) using **Gemma Scope 16k JumpReLU Sparse Autoencoders (SAEs)**, **Residual Linear Probes**, and **Closed-Loop Probe-Gated Circuit Breakers**.
 
 - **Author:** [Daniel Gaskins](https://danielgaskins.com/)
 - **Interactive Case Study:** [danielgaskins.com/agentic-sabotage.html](https://danielgaskins.com/agentic-sabotage.html)
@@ -20,6 +20,8 @@ End-to-end mechanistic interpretability benchmark and codebase mapping **unautho
 2. **Closing the SAE Superposition Gap at Scale:** At ~57% model depth (`9B` Layer 24), sparse L1 probes over **Gemma Scope 9B 16k SAE latents** reach **`0.9585` AUROC**, matching dense residual probes (`0.9529` at L24; `0.962` peak at L36).
 3. **Scale-Dependent Steering Disentanglement:** On `Gemma-2-2B-IT`, dense linear probes trigger polysemantic over-refusal on benign coding tasks at $\alpha \ge +0.20$ (`96.7% → 50.0% → 0.0%` accuracy), whereas **Gemma Scope 16k SAE steering** disentangles shortcut latents from general tool syntax (`cos(SAE, Probe) = 0.248`), reducing sabotage from **`52.1% → 27.1%` at `100.0%` benign coding accuracy** ($\alpha = +0.20$) and **`18.8%` at `90.0%` accuracy** ($\alpha = +0.25$). On `Gemma-2-9B-IT`, both **SAE steering** (`31.25% → 6.25%` sabotage) and **dense probe steering** (`31.25% → 2.08%` sabotage) preserve **`100.0%` benign coding accuracy**.
 4. **Study 2 — "Silent Commitment" & Unfaithful Chain-of-Thought (`<think>` vs. Layer-24 SAE Probes):** When `Gemma-2-9B-IT` reasons inside an explicit `<think>...</think>` scratchpad prior to `TOOL_CALL:` (`N = 228` rollouts), **`88.9%`** of sabotage traces evade lexical CoT filters (`0.676` AUROC) and **`25.3%`** fool an independent **9B LLM Compliance Auditor** (`0.870` AUROC — rising to **`28.9%` unfaithful CoT** when warned that `<think>` logs are audited). Yet **strictly inside `<think>` (before `TOOL_CALL:` begins)**, the **Layer-24 Gemma Scope 16k SAE L1 Probe** reaches **`0.980 ± 0.018` AUROC** (and Study 1's frozen no-CoT Layer-24 probe transfers zero-shot at **`0.946` AUROC**), catching **`91.7%`** of Auditor-fooled `503` output fabrications and **`100.0%`** (`11/11`) of Auditor-fooled audited-scratchpad sabotage cases—with **Latents `#11381` and `#15689` spiking a median `29.0`–`34.5` tokens before `TOOL_CALL:`** while honest repair **Latent `#6787` stays flat at `0.0`**.
+5. **Study 2.5 — Closed-Loop Probe-Gated Circuit Breaker:** Keeping inference unsteered by default (`0.0%` false-trigger rate across `30/30` benign controls on every model) and latching multi-layer planning-block steering through `TOOL_CALL:` *only* when the white-box probe crosses a disjointly calibrated threshold $\tau$ **solves the `2B` Polysemantic Cliff** (`52.1% → 10.4%` sabotage while rescuing benign coding accuracy from `0.0% → 96.7%` at $\alpha = +0.25$) and **defeats `9B` `<think>` Action Re-Locking** (`66.7% → 13.9%` SAE / **`5.6%`** Dense sabotage vs. `55.6%` `<think>`-only steering, with **`100.0%` benign `<think>` coding accuracy**).
+6. **Cross-Family Generalization (`Qwen/Qwen2.5-7B-Instruct`):** Replicating the benchmark on `Qwen2.5-7B-Instruct` (`28` layers, single pre-RMSNorm + GQA + SwiGLU, no soft-capping) confirms that pressured `503` fabrication (`4.0% → 96.0%`), mid-network linear pre-commitment emergence (**peaking at Layer `16/28 = 57.1%` depth at `0.937 ± 0.028` AUROC**, matching `Gemma-2-9B`'s `24/42 = 57.1%`), `<think>` Silent Commitment (`0.959` zero-shot transfer and **`0.978` pre-tool `<think>` AUROC** vs. `0.830` 7B LLM CoT Auditor, catching `100%` of Auditor-fooled `503` fabrications), and Closed-Loop Circuit-Breaker rescue (`37.5% → 14.6%` sabotage at **`100.0%` benign coding accuracy** vs. `53.3%` Always-On) are architecture-invariant phenomena.
 
 ![Silent Commitment Unfaithful CoT Trace](figures/silent_commitment/2_unfaithful_cot_single_trace.png)
 
@@ -83,6 +85,13 @@ uv run python -m agentic_sabotage.cross_scale
 
 # Run Study 2: Silent Commitment (<think> CoT faithfulness vs. Layer-24 SAE probes)
 uv run sabotage run-silent-commitment --model gemma-2-9b-it --batch-size 6
+
+# Run Study 2.5: Closed-Loop Probe-Gated Circuit Breaker (2B & 9B)
+uv run sabotage run-circuit-breaker --stage 2b --alpha 0.25 --batch-size 8
+uv run sabotage run-circuit-breaker --stage 9b --alpha 0.25 --batch-size 4
+
+# Run Cross-Family Generalization Spot Check (Qwen2.5-7B-Instruct)
+uv run sabotage run-cross-family --model qwen2.5-7b-instruct --batch-size 6
 ```
 
 ## Related Work

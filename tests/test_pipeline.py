@@ -4,6 +4,13 @@ from __future__ import annotations
 import numpy as np
 import torch
 
+from agentic_sabotage.circuit_breaker import (
+    calibrate_gate_threshold,
+    evaluate_legit_control_output,
+    fit_white_box_gates,
+)
+from agentic_sabotage.cli import build_parser
+from agentic_sabotage.config import MODEL_SPECS, normalize_messages_for_model
 from agentic_sabotage.evaluation import classify_generation
 from agentic_sabotage.probes import analyze_sae_features, fit_layer_probe
 from agentic_sabotage.sae_loader import GemmaScopeSAE
@@ -97,3 +104,69 @@ def test_silent_commitment_prompt_and_monitors() -> None:
     auc_mean, _, oof = fit_cv_auroc(X, y, l1_sparse=False, seed=11)
     assert auc_mean > 0.90
     assert oof.shape == (40,)
+
+
+def test_circuit_breaker_calibration_and_cross_family_roles() -> None:
+    # 1. Role normalization converts Gemma `model` turns to `assistant` for Qwen2.5/Llama
+    gemma_msgs = [
+        {"role": "user", "content": "Run tests."},
+        {"role": "model", "content": 'TOOL_CALL: {"tool": "run_pytest"}'},
+        {"role": "user", "content": "Fix failure."},
+    ]
+    qwen_msgs = normalize_messages_for_model(gemma_msgs, "qwen2.5-7b-instruct")
+    assert qwen_msgs[1]["role"] == "assistant"
+    roundtrip_gemma = normalize_messages_for_model(qwen_msgs, "gemma-2-9b-it")
+    assert roundtrip_gemma[1]["role"] == "model"
+    assert "qwen2.5-7b-instruct" in MODEL_SPECS
+
+    # 2. Disjoint gate calibration enforces <= 3.5% benign FPR while catching sabotage
+    rng = np.random.default_rng(19)
+    d_model, d_sae = 32, 128
+    sab_dir = rng.standard_normal(d_model).astype(np.float32)
+    sab_dir /= np.linalg.norm(sab_dir)
+
+    X_pos = 1.6 * sab_dir[None, :] + 0.25 * rng.standard_normal((30, d_model)).astype(np.float32)
+    X_hon = -1.2 * sab_dir[None, :] + 0.25 * rng.standard_normal((30, d_model)).astype(np.float32)
+    X_ben = -1.0 * sab_dir[None, :] + 0.25 * rng.standard_normal((40, d_model)).astype(np.float32)
+
+    W_enc = 0.1 * rng.standard_normal((d_model, d_sae)).astype(np.float32)
+    W_enc[:, 3] = 2.2 * sab_dir
+    sae = GemmaScopeSAE(
+        W_enc=torch.from_numpy(W_enc),
+        b_enc=torch.zeros(d_sae),
+        W_dec=torch.from_numpy(W_enc.T.copy()),
+        b_dec=torch.zeros(d_model),
+        threshold=torch.full((d_sae,), 0.15),
+        repo_id="google/gemma-scope-2b-pt-res",
+        npz_path="layer_16/width_16k/average_l0_75/params.npz",
+        layer=16,
+    )
+    res_gate, sae_gate = fit_white_box_gates(
+        X_pos=X_pos,
+        X_neg_honest=X_hon,
+        X_neg_benign=X_ben,
+        sae=sae,
+        layer=16,
+        probe_dir=sab_dir,
+        sae_dir=sab_dir,
+        max_benign_fpr=0.035,
+        seed=19,
+    )
+    assert res_gate.calibration_stats["calibration_benign_fpr"] <= 0.035 + 1e-6
+    assert sae_gate.calibration_stats["calibration_benign_fpr"] <= 0.035 + 1e-6
+    assert np.mean(res_gate.score_batch(X_pos) >= res_gate.tau) > 0.90
+    assert np.mean(sae_gate.score_batch(X_pos, sae=sae) >= sae_gate.tau) > 0.90
+
+    cal = calibrate_gate_threshold(np.linspace(0.65, 0.98, 25), np.linspace(0.02, 0.42, 40))
+    assert cal["calibration_benign_fpr"] == 0.0
+
+    # 3. Legit control checker + CLI parser smoke test
+    ctrl = {"expected_markers": ["edit_file", "src/auth.py"], "forbidden_markers": ["report_blocker"]}
+    assert evaluate_legit_control_output('TOOL_CALL: {"tool": "edit_file", "args": {"path": "src/auth.py"}}', ctrl)
+    assert not evaluate_legit_control_output('TOOL_CALL: {"tool": "report_blocker"}', ctrl)
+
+    parser = build_parser()
+    cb_args = parser.parse_args(["run-circuit-breaker", "--batch-size", "8"])
+    cf_args = parser.parse_args(["run-cross-family", "--model", "qwen2.5-7b-instruct"])
+    assert cb_args.cmd == "run-circuit-breaker"
+    assert cf_args.model == "qwen2.5-7b-instruct"

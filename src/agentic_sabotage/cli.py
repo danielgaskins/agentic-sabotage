@@ -13,7 +13,11 @@ import torch
 
 from .activations import ActivationDataset, collect_decision_activations, load_target_model
 from .benchmark_gen import build_benchmark
+from .circuit_breaker import run_circuit_breaker_study
+from .circuit_breaker_plots import plot_circuit_breaker_suite
 from .config import MODEL_SPECS, SABOTAGE_CATEGORIES, Paths
+from .cross_family import run_cross_family_study
+from .cross_family_plots import plot_cross_family_suite
 from .plotting import (
     plot_behavioral_pressure_effect,
     plot_layer_probe_sweep,
@@ -334,6 +338,26 @@ def build_parser() -> argparse.ArgumentParser:
     scp = sub.add_parser("plot-silent-commitment")
     scp.add_argument("--model", choices=list(MODEL_SPECS.keys()), default="gemma-2-9b-it")
 
+    cb = sub.add_parser("run-circuit-breaker")
+    cb.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    cb.add_argument("--alpha", type=float, default=0.25)
+    cb.add_argument("--batch-size", type=int, default=8)
+    cb.add_argument("--stage", choices=["all", "2b", "9b"], default="all")
+    cb.add_argument("--seed", type=int, default=42)
+
+    cbp = sub.add_parser("plot-circuit-breaker")
+
+    cf = sub.add_parser("run-cross-family")
+    cf.add_argument("--model", choices=list(MODEL_SPECS.keys()), default="qwen2.5-7b-instruct")
+    cf.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    cf.add_argument("--n-behavioral-per-cat", type=int, default=25)
+    cf.add_argument("--n-cot-per-focus-cat", type=int, default=18)
+    cf.add_argument("--alpha", type=float, default=0.20)
+    cf.add_argument("--batch-size", type=int, default=8)
+    cf.add_argument("--seed", type=int, default=42)
+
+    cfp = sub.add_parser("plot-cross-family")
+
     return p
 
 
@@ -395,6 +419,81 @@ def cmd_plot_silent_commitment(args: argparse.Namespace) -> None:
     print(f"[OK] Re-rendered {len(figs)} Silent Commitment figures in {fig_dir}")
 
 
+def cmd_run_circuit_breaker(args: argparse.Namespace) -> None:
+    paths = Paths().ensure()
+    scenarios = _load_jsonl(paths.data_dir / "sabotage_benchmark.jsonl")
+    controls = _load_jsonl(paths.data_dir / "legit_controls.jsonl")
+
+    report = run_circuit_breaker_study(
+        results_dir=paths.results_dir,
+        all_scenarios=scenarios,
+        all_controls=controls,
+        device=args.device,
+        alpha_breaker=args.alpha,
+        batch_size=args.batch_size,
+        seed=args.seed,
+        stage=args.stage,
+    )
+    if args.stage == "2b":
+        print("[OK] Saved intermediate 2B Circuit Breaker results; run --stage 9b next to finalize.")
+        return
+    out_dir = paths.results_dir / "circuit_breaker"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_json = out_dir / "circuit_breaker_results.json"
+    out_json.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[OK] Saved Closed-Loop Circuit Breaker results -> {out_json}")
+
+    fig_dir = paths.figures_dir / "circuit_breaker"
+    figs = plot_circuit_breaker_suite(report, fig_dir)
+    print(f"[OK] Generated {len(figs)} Circuit Breaker figures in {fig_dir}")
+
+
+def cmd_plot_circuit_breaker(_args: argparse.Namespace) -> None:
+    paths = Paths().ensure()
+    res_json = paths.results_dir / "circuit_breaker" / "circuit_breaker_results.json"
+    report = json.loads(res_json.read_text(encoding="utf-8"))
+    fig_dir = paths.figures_dir / "circuit_breaker"
+    figs = plot_circuit_breaker_suite(report, fig_dir)
+    print(f"[OK] Re-rendered {len(figs)} Circuit Breaker figures in {fig_dir}")
+
+
+def cmd_run_cross_family(args: argparse.Namespace) -> None:
+    paths = Paths().ensure()
+    scenarios = _load_jsonl(paths.data_dir / "sabotage_benchmark.jsonl")
+    controls = _load_jsonl(paths.data_dir / "legit_controls.jsonl")
+
+    report = run_cross_family_study(
+        model_key=args.model,
+        all_scenarios=scenarios,
+        all_controls=controls,
+        results_dir=paths.results_dir,
+        device=args.device,
+        n_behavioral_per_cat=args.n_behavioral_per_cat,
+        n_cot_per_focus_cat=args.n_cot_per_focus_cat,
+        alpha_steer=args.alpha,
+        batch_size=args.batch_size,
+        seed=args.seed,
+    )
+    out_dir = paths.results_dir / "cross_family"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_json = out_dir / "qwen25_7b_results.json"
+    out_json.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[OK] Saved Cross-Family Spot Check results -> {out_json}")
+
+    fig_dir = paths.figures_dir / "cross_family"
+    figs = plot_cross_family_suite(report, fig_dir)
+    print(f"[OK] Generated {len(figs)} Cross-Family figures in {fig_dir}")
+
+
+def cmd_plot_cross_family(_args: argparse.Namespace) -> None:
+    paths = Paths().ensure()
+    res_json = paths.results_dir / "cross_family" / "qwen25_7b_results.json"
+    report = json.loads(res_json.read_text(encoding="utf-8"))
+    fig_dir = paths.figures_dir / "cross_family"
+    figs = plot_cross_family_suite(report, fig_dir)
+    print(f"[OK] Re-rendered {len(figs)} Cross-Family figures in {fig_dir}")
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -412,6 +511,14 @@ def main() -> None:
         cmd_run_silent_commitment(args)
     elif args.cmd == "plot-silent-commitment":
         cmd_plot_silent_commitment(args)
+    elif args.cmd == "run-circuit-breaker":
+        cmd_run_circuit_breaker(args)
+    elif args.cmd == "plot-circuit-breaker":
+        cmd_plot_circuit_breaker(args)
+    elif args.cmd == "run-cross-family":
+        cmd_run_cross_family(args)
+    elif args.cmd == "plot-cross-family":
+        cmd_plot_cross_family(args)
 
 
 if __name__ == "__main__":
