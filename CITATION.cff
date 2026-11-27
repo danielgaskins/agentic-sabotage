@@ -2,9 +2,9 @@ cff-version: 1.2.0
 message: "If you use this benchmark, SAE circuit analysis, or closed-loop circuit-breaker code, please cite it using the metadata below."
 title: "Mechanistic Debugging of Agentic Sabotage and Unfaithful Chain-of-Thought: Sparse Autoencoder Circuits, Silent Commitment & Probe-Gated Circuit Breakers"
 type: software
-version: 1.0.0
-doi: 10.5281/zenodo.24520830
-date-released: "2026-11-24"
+version: 1.0.1
+doi: 10.5281/zenodo.24596272
+date-released: "2026-11-27"
 license: MIT
 url: "https://danielgaskins.com/agentic-sabotage.html"
 repository-code: "https://github.com/danielgaskins/agentic-sabotage"

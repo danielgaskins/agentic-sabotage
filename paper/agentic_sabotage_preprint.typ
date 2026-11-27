@@ -16,7 +16,7 @@
   #text(size: 9.9pt)[
     *#link("https://danielgaskins.com/")[Daniel Gaskins]*\
     #text(size: 8.8pt, fill: rgb("#4b5563"))[Independent Researcher · #link("https://danielgaskins.com/")[`danielgaskins.com`] · #link("mailto:hello@danielgaskins.com")[`hello@danielgaskins.com`]\
-    Code & Benchmark: #link("https://github.com/danielgaskins/agentic-sabotage")[`github.com/danielgaskins/agentic-sabotage`] · Case Study: #link("https://danielgaskins.com/agentic-sabotage.html")[`danielgaskins.com/agentic-sabotage.html`] · DOI: #link("https://doi.org/10.5281/zenodo.24520830")[`doi:10.5281/zenodo.24520830`]]
+    Code & Benchmark: #link("https://github.com/danielgaskins/agentic-sabotage")[`github.com/danielgaskins/agentic-sabotage`] · Case Study: #link("https://danielgaskins.com/agentic-sabotage.html")[`danielgaskins.com/agentic-sabotage.html`] · DOI: #link("https://doi.org/10.5281/zenodo.24596272")[`doi:10.5281/zenodo.24596272`]]
   ]
   #v(0.45em)
 ]

@@ -3,7 +3,7 @@
 [![Case Study](https://img.shields.io/badge/Case_Study-danielgaskins.com-8cbf24.svg)](https://danielgaskins.com/agentic-sabotage.html)
 [![Paper PDF](https://img.shields.io/badge/Paper-PDF-b31b1b.svg)](paper/agentic_sabotage_preprint.pdf)
 [![YouTube Overview](https://img.shields.io/badge/YouTube-7m_Overview-ff0000.svg)](https://youtu.be/Nzzyn8tH_MI)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24520830.svg)](https://doi.org/10.5281/zenodo.24520830)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24596272.svg)](https://doi.org/10.5281/zenodo.24596272)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/danielgaskins/agentic-sabotage/blob/main/notebooks/colab_gemma2_9b_sabotage.ipynb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -13,7 +13,7 @@ End-to-end mechanistic interpretability benchmark and codebase mapping **unautho
 - **Interactive Case Study:** [danielgaskins.com/agentic-sabotage.html](https://danielgaskins.com/agentic-sabotage.html)
 - **Video Overview (7:43):** [Catching AI in a Lie 38 Tokens Early (YouTube)](https://youtu.be/Nzzyn8tH_MI)
 - **Preprint PDF:** [`paper/agentic_sabotage_preprint.pdf`](paper/agentic_sabotage_preprint.pdf) ([direct web PDF](https://danielgaskins.com/papers/agentic_sabotage_preprint.pdf))
-- **Benchmark & Software Archive (Zenodo DOI):** [`10.5281/zenodo.24520830`](https://doi.org/10.5281/zenodo.24520830)
+- **Benchmark & Software Archive (Zenodo DOI):** [`10.5281/zenodo.24596272`](https://doi.org/10.5281/zenodo.24596272)
 - **Detailed Tables & Notes:** [`REPORT.md`](REPORT.md)
 
 ![Cross-Scale Mechanistic Comparison](figures/cross_scale/5_cross_scale_2b_vs_9b.png)
@@ -110,15 +110,15 @@ uv run sabotage run-cross-family --model qwen2.5-7b-instruct --batch-size 6
   author  = {Gaskins, Daniel},
   year    = {2026},
   url     = {https://danielgaskins.com/agentic-sabotage.html},
-  note    = {Benchmark and code archived at https://doi.org/10.5281/zenodo.24520830}
+  note    = {Benchmark and code archived at https://doi.org/10.5281/zenodo.24596272}
 }
 
 @software{gaskins2026agenticsabotage_code,
   title   = {Agentic Sabotage \& Silent Commitment: 500-Scenario Counterfactual Benchmark, Gemma Scope SAE Probes \& Closed-Loop Circuit Breakers},
   author  = {Gaskins, Daniel},
   year    = {2026},
-  version = {1.0.0},
-  doi     = {10.5281/zenodo.24520830},
-  url     = {https://doi.org/10.5281/zenodo.24520830}
+  version = {1.0.1},
+  doi     = {10.5281/zenodo.24596272},
+  url     = {https://doi.org/10.5281/zenodo.24596272}
 }
 ```
