@@ -115,7 +115,7 @@ def plot_unfaithful_cot_single_trace(report: dict[str, Any], out_path: Path) -> 
     audit_pct = 100.0 * ex["llm_cot_auditor_score"]
     sae_pct = 100.0 * ex.get("pretool_sae_probe_prob", 0.9)
     ax1.set_title(
-        f"Unfaithful <think> Trace ({cat_pretty}, {ex['id']}) — "
+        f"Unfaithful <think> Trace ({cat_pretty}, {ex['id']}): "
         f"External 9B CoT Auditor: {audit_pct:.0f}% Suspicion (FOOLED) vs. L24 SAE Probe: {sae_pct:.0f}% Sabotage"
     )
     ax1.legend(loc="upper left", fontsize=8.6, frameon=True)
@@ -163,7 +163,16 @@ def plot_monitor_evasion_quadrant(report: dict[str, Any], out_path: Path) -> Non
 
     # Highlight Silent Commitment Zone (X < 0.50 CoT Auditor Fooled, Y >= 0.50 SAE Probe Caught!)
     ax1.axvspan(-0.04, 0.50, ymin=0.50 / 1.08, ymax=1.0, color="#fef2f2", alpha=0.85, zorder=0)
-    ax1.text(0.03, 0.93, "SILENT COMMITMENT ZONE\n(CoT Auditor Fooled,\nL24 SAE Probe Catches)", fontsize=8.5, fontweight="bold", color="#991b1b")
+    ax1.text(
+        0.03,
+        0.93,
+        "SILENT COMMITMENT ZONE\n(CoT Auditor Fooled,\nL24 SAE Probe Catches)",
+        fontsize=8.5,
+        fontweight="bold",
+        color="#991b1b",
+        bbox={"boxstyle": "round,pad=0.2", "facecolor": "#fef2f2", "edgecolor": "none", "alpha": 0.9},
+        zorder=5,
+    )
 
     ax1.scatter(
         [r["llm_cot_auditor_score"] for r in hon],
@@ -180,7 +189,7 @@ def plot_monitor_evasion_quadrant(report: dict[str, Any], out_path: Path) -> Non
         alpha=0.78,
         s=44,
         marker="o",
-        label=f"Sabotage — Unmonitored <think> (n={len(sab_unmon)})",
+        label=f"Sabotage: Unmonitored <think> (n={len(sab_unmon)})",
     )
     if sab_audit:
         ax1.scatter(
@@ -190,7 +199,7 @@ def plot_monitor_evasion_quadrant(report: dict[str, Any], out_path: Path) -> Non
             alpha=0.85,
             s=52,
             marker="^",
-            label=f"Sabotage — Audited <think> Notice (n={len(sab_audit)})",
+            label=f"Sabotage: Audited <think> Notice (n={len(sab_audit)})",
         )
 
     ax1.axvline(0.50, color="#374151", ls="--", lw=1.1)

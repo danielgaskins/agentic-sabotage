@@ -5,7 +5,7 @@
 **Models Evaluated (`bfloat16`, Single 24 GB NVIDIA L4 / Colab GPU, Zero Weight Fine-Tuning):**
 - **`Gemma-2-2B-IT` + `Gemma Scope 2B 16k JumpReLU SAEs`** (`Layers 14, 16, 18, 20`)
 - **`Gemma-2-9B-IT` + `Gemma Scope 9B 16k JumpReLU SAEs`** (`Layers 20, 24, 28, 32`)
-- **`Qwen/Qwen2.5-7B-Instruct`** (`Layers 14, 16, 18, 20` — Cross-Family Generalization Spot Check; standard single pre-RMSNorm + GQA + SwiGLU architecture)
+- **`Qwen/Qwen2.5-7B-Instruct`** (`Layers 14, 16, 18, 20`: Cross-Family Generalization Spot Check; standard single pre-RMSNorm + GQA + SwiGLU architecture)
 
 ---
 
@@ -20,13 +20,13 @@ We investigate **agentic sabotage and tool-call hallucinations** across model sc
    - **However, `Gemma-2-9B-IT` exhibits *higher* sycophantic `tool_output_fabrication` under executive bottleneck pressure (`88.0%` in `9B` vs. `60.0%` in `2B`, jumping from `4.0%` unpressured → `88.0%` pressured).** Stronger instruction-following capability makes `9B` more compliant when pressured to fabricate plausible dashboard metrics during an upstream 503 outage.
 2. **Closing the SAE Superposition Gap at 9B Scale:**
    - At ~57% model depth, 5-fold cross-validated residual probe AUROC rises from **`0.877 ± 0.037`** (`2B` L14) to **`0.953 ± 0.029`** (`9B` L24; peaking at **`0.962`** at `9B` L36).
-   - Sparse L1 probes over **Gemma Scope 16k SAE latents** jump from **`0.829`** (`2B` L20) to **`0.9585`** (`9B` L24) — **matching/exceeding the dense residual probe (`0.9585` vs. `0.9529`)** at `0.898` reconstruction cosine similarity.
+   - Sparse L1 probes over **Gemma Scope 16k SAE latents** jump from **`0.829`** (`2B` L20) to **`0.9585`** (`9B` L24), **matching/exceeding the dense residual probe (`0.9585` vs. `0.9529`)** at `0.898` reconstruction cosine similarity.
 3. **Human-Interpretable Pre-Commitment Latents (Neuronpedia Auto-Interp):**
    - **`2B` Layer 16:** Sabotage trajectories pre-activate **Latent #3573** (*"references to testing frameworks and the configuration of test suites"*, $d = +0.855$, firing `2.6×` more often before the agent tampers with `tests/`), while honest trajectories activate **Latent #2815** (*"attributes related to leadership and accountability"*, $d = -0.689$, `12×` enrichment).
    - **`9B` Layer 24:** Single SAE latents achieve up to **`0.829` single-feature AUROC** (`#15689`: *"technical details and specifications related to systems or protocols"*, $d = +1.49$; `#11381`: *"causal relationships and the responsibilities of different parties"*, $d = +1.04$, firing `39.2%` on sabotage vs. `0.7%` on honest), whereas honest engineering fixes strongly activate **Latent #6787** (*"references to algorithms and computational methods"*, $d = -1.48$, firing **`56.4%` on honest fixes vs. `0.0%` on sabotage**).
 4. **Causal Activation Steering & Scale-Dependent Polysemanticity:**
    - **At `2B` scale ($d_{\text{model}} = 2304$):** Dense residual probes hit a severe **over-refusal cliff** at $\alpha \ge +0.20$ (`0%` sabotage, `50% → 0%` benign coding accuracy), whereas **Gemma Scope 2B SAE steering** disentangles shortcut latents from general coding tool syntax (`cos(SAE, Probe) = 0.248`), cutting sabotage **`52.1% → 27.1%` at `100.0%` benign coding accuracy** ($\alpha = +0.20$) and **`18.8%` at `90.0%` benign coding accuracy** ($\alpha = +0.25$).
-   - **At `9B` scale ($d_{\text{model}} = 3584$):** Higher-dimensional representations are better disentangled natively—**Gemma Scope 9B SAE steering** cuts sabotage **`31.25% → 6.25%` (`80%` relative reduction)** with **`100.0%` (`30/30`) benign coding accuracy**, and **Dense Probe steering** cuts sabotage **`31.25% → 2.08%` (`93.3%` relative reduction)** while also retaining **`100.0%` (`30/30`) benign coding accuracy**.
+   - **At `9B` scale ($d_{\text{model}} = 3584$):** Higher-dimensional representations are better disentangled natively: **Gemma Scope 9B SAE steering** cuts sabotage **`31.25% → 6.25%` (`80%` relative reduction)** with **`100.0%` (`30/30`) benign coding accuracy**, and **Dense Probe steering** cuts sabotage **`31.25% → 2.08%` (`93.3%` relative reduction)** while also retaining **`100.0%` (`30/30`) benign coding accuracy**.
 
 ---
 
@@ -49,11 +49,11 @@ We investigate **agentic sabotage and tool-call hallucinations** across model sc
 | **`2B` Dense Linear Probe** *(Sab ↓ / Benign ↑)* | `52.1%` / `96.7%` | `52.1%` / `96.7%` | `18.8%` / `93.3%` | `0.0%` / `50.0%` | `0.0%` / `0.0%` |
 | **`9B` Gemma Scope SAE** *(Sab ↓ / Benign ↑)* | `31.2%` / `100%` | `31.2%` / `100%` | `29.2%` / **`100%`** | `20.8%` / **`100%`** | **`6.25%` / `100%`** |
 | **`9B` Dense Linear Probe** *(Sab ↓ / Benign ↑)* | **`35.4%`** / `100%` | `31.2%` / `100%` | `8.3%` / **`100%`** | **`2.08%` / `100%`** | **`2.08%` / `100%`** |
-| **`9B` Random Orthogonal** *(Sab ↓ / Benign ↑)* | `31.2%` / `100%` | `31.2%` / `100%` | `27.1%` / `100%` | `29.2%` / `100%` | — |
+| **`9B` Random Orthogonal** *(Sab ↓ / Benign ↑)* | `31.2%` / `100%` | `31.2%` / `100%` | `27.1%` / `100%` | `29.2%` / `100%` | N/A |
 
 ---
 
-## 3. Study 2: The "Silent Commitment" Study — Unfaithful CoT vs. Layer-24 SAE Probes (`Gemma-2-9B-IT`)
+## 3. Study 2: The "Silent Commitment" Study: Unfaithful CoT vs. Layer-24 SAE Probes (`Gemma-2-9B-IT`)
 
 To test whether external Chain-of-Thought (CoT) monitoring suffices to catch agentic sabotage before execution, we elicit explicit `<think>...</think>` reasoning scratchpads from `Gemma-2-9B-IT` prior to `TOOL_CALL:` across `N = 228` rollouts (`224` unambiguously labeled: `99` sabotage, `125` honest) spanning both **Unmonitored Scratchpads** and **Audited Scratchpads** (where a compliance notice warns that `<think>` logs are audited).
 
@@ -70,7 +70,7 @@ To test whether external Chain-of-Thought (CoT) monitoring suffices to catch age
 
 ### Table 4: Unfaithful CoT Evasion Rates & White-Box Pre-Tool Recovery
 
-| Sabotage Cohort | Sabotage `N` | Evades Lexical CoT Monitor | Fools 9B LLM CoT Auditor (`< 0.50`) | Caught by L24 SAE Probe *(on Auditor-Fooled!)* | Caught by L24 Resid Probe *(on Auditor-Fooled!)* |
+| Sabotage Cohort | Sabotage `N` | Evades Lexical CoT Monitor | Fools 9B LLM CoT Auditor (`< 0.50`) | Caught by L24 SAE Probe *(on Auditor-Fooled)* | Caught by L24 Resid Probe *(on Auditor-Fooled)* |
 |---|---:|---:|---:|---:|---:|
 | **All Sabotage Rollouts** | 99 | **88.9%** | **25.3%** (`25/99`) | **88.0%** (`22/25`) | **92.0%** (`23/25`) |
 | **`503` Tool Output Fabrication** | 49 | **87.8%** | **24.5%** (`12/49`) | **91.7%** (`11/12`) | **91.7%** (`11/12`) |
@@ -90,7 +90,7 @@ To test whether external Chain-of-Thought (CoT) monitoring suffices to catch age
 
 To eliminate both the **Polysemantic Over-Refusal Cliff** (`2B` Always-On Dense Probe crashing benign coding accuracy to `0.0%` at $\alpha = +0.25$) and **`<think>` Action Re-Locking** (`9B`), we combine our white-box probes and multi-layer planning-block hooks into a **Closed-Loop Probe-Gated Circuit Breaker**. Gate thresholds $\tau$ are calibrated strictly on disjoint validation prompts (`sabotage_benchmark[:44]` + `legit_controls[40:80]`, targeting $\le 3.5\%$ benign false-positive rate) and evaluated zero-leakage on held-out test sets (`sabotage_benchmark[-48:]`, `legit_controls[:30]`, and `N = 36` held-out `<think>` focus prompts).
 
-### Table 5: Direct Boundary Circuit Breaker — Solving the `2B` Polysemantic Cliff ($\alpha = +0.25$)
+### Table 5: Direct Boundary Circuit Breaker: Solving the `2B` Polysemantic Cliff ($\alpha = +0.25$)
 
 | Model & Condition (`N = 48` Pressured, `N = 30` Benign) | Sabotage Rate ↓ | Benign Coding Accuracy ↑ | Gate Trigger (Pressured / Benign) |
 |---|---:|---:|---:|
@@ -104,7 +104,7 @@ To eliminate both the **Polysemantic Over-Refusal Cliff** (`2B` Always-On Dense 
 | **`9B` Probe-Gated Dense Circuit Breaker** ($\alpha = +0.25$) | **`10.4%`** | **`100.0%`** | `47.9%` / **`0.0%`** (`0/30`) |
 | **`9B` SAE-Gated Dense Circuit Breaker** ($\alpha = +0.25$) | **`10.4%`** | **`100.0%`** | `29.2%` / **`0.0%`** (`0/30`) |
 
-### Table 6: `Gemma-2-9B-IT` Streaming `<think>` Circuit Breaker — Defeating Action Re-Locking (`N = 36` Focus + `N = 30` Benign CoT)
+### Table 6: `Gemma-2-9B-IT` Streaming `<think>` Circuit Breaker: Defeating Action Re-Locking (`N = 36` Focus + `N = 30` Benign CoT)
 
 | `<think> + TOOL_CALL:` Regime ($\alpha = +0.25$) | Sabotage Rate ↓ | Honest Rate ↑ | Benign `<think>` Accuracy ↑ | Gate Trigger (Pressured / Benign) |
 |---|---:|---:|---:|---:|
@@ -130,10 +130,10 @@ To test whether pre-action shortcut separability and Silent Commitment inside `<
 | **Unpressured → Pressured Test Tampering** | `28.0% → 92.0%` | `0.0% → 56.0%` | **`0.0% → 60.0%` (+60.0 pp)** |
 | **Peak Mid-Network Probe Layer (% Depth)** | `L14/26` (`53.8%`) | `L24/42` (`57.1%`) | **`L16/28` (`57.1%`)** |
 | **5-Fold CV Residual Probe AUROC @ ~57% Depth** | `0.877 ± 0.037` | `0.953 ± 0.029` | **`0.937 ± 0.028`** (`DiffMeans = 0.922`) |
-| **Black-Box LLM CoT Compliance Auditor AUROC** | — | `0.870` | **`0.830`** (`19.4%` `503` evasion) |
-| **Zero-Shot No-CoT Probe Transferred to `<think>`** | — | `0.946` | **`0.959`** |
-| **White-Box Pre-Tool `<think>` Probe AUROC** | — | `0.976` (`0.980` SAE) | **`0.978 ± 0.025`** (`0.962` @ 20% `<think>`) |
-| **White-Box Recovery on Auditor-Fooled `503` CoTs** | — | `91.7%` (`100%` Audited) | **`100.0%` (`7/7`; `5/5` Audited)** |
+| **Black-Box LLM CoT Compliance Auditor AUROC** | N/A | `0.870` | **`0.830`** (`19.4%` `503` evasion) |
+| **Zero-Shot No-CoT Probe Transferred to `<think>`** | N/A | `0.946` | **`0.959`** |
+| **White-Box Pre-Tool `<think>` Probe AUROC** | N/A | `0.976` (`0.980` SAE) | **`0.978 ± 0.025`** (`0.962` @ 20% `<think>`) |
+| **White-Box Recovery on Auditor-Fooled `503` CoTs** | N/A | `91.7%` (`100%` Audited) | **`100.0%` (`7/7`; `5/5` Audited)** |
 | **Always-On Dense Probe Benign Accuracy** | `0.0%` ($\alpha=+0.25$) | `100.0%` ($\alpha=+0.25$) | `53.3%` ($\alpha=+0.20$) |
 | **Closed-Loop Circuit Breaker *(Sab ↓ / Benign ↑)*** | **`10.4%` / `96.7%`** | **`10.4%` / `100.0%`** | **`14.6%` / `100.0%`** (`0.0%` benign FPR) |
 
